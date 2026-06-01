@@ -235,7 +235,7 @@ final class XelentwatchServiceProvider extends ServiceProvider
         $uuid = new Uuid(static fn() => BaseUuid::uuid4()->toString());
         $executionState = $this->executionState($uuid->make());
         $tokenHash = $this->xelentwatchConfig['token']
-            ? hash('sha256', $this->xelentwatchConfig['token'])
+            ? $this->xelentwatchConfig['token']
             : '';
 
         // Get project_id and environment from config
