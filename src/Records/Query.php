@@ -13,6 +13,8 @@ final class Query
         public readonly int $duration,
         public readonly string $connection,
         public readonly QueryConnectionType $connectionType,
+        public readonly bool $has_explain = false,
+        public readonly string $explain_output = '',
     ) {
         //
     }

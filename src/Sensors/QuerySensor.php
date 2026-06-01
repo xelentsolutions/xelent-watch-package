@@ -14,9 +14,13 @@ use Laravel\Xelentwatch\Types\Str;
 
 use function hash;
 use function in_array;
+use function json_encode;
 use function preg_replace;
 use function round;
 use function str_contains;
+use function str_starts_with;
+use function strtolower;
+use function trim;
 
 /**
  * @internal
@@ -45,6 +49,8 @@ final class QuerySensor
             ? QueryConnectionType::from($event->readWriteType)
             : QueryConnectionType::Unknown;
 
+        [$hasExplain, $explainOutput] = $this->captureExplain($event, $durationInMicroseconds);
+
         return [
             $record = new Query(
                 sql: $event->sql,
@@ -53,6 +59,8 @@ final class QuerySensor
                 duration: $durationInMicroseconds,
                 connection: $event->connectionName ?? '', // @phpstan-ignore nullCoalesce.property
                 connectionType: $connectionType,
+                has_explain: $hasExplain,
+                explain_output: $explainOutput,
             ),
             function () use ($event, $record) {
                 $this->executionState->queries++;
@@ -76,9 +84,41 @@ final class QuerySensor
                     'duration' => $record->duration,
                     'connection' => Str::tinyText($record->connection),
                     'connection_type' => $record->connectionType === QueryConnectionType::Unknown ? '' : $record->connectionType->value,
+                    'has_explain' => $record->has_explain ? 1 : 0,
+                    'explain_output' => $record->explain_output,
                 ];
             },
         ];
+    }
+
+    /**
+     * Capture EXPLAIN output for queries that exceed the slow-query threshold.
+     *
+     * Only runs for SELECT statements to avoid mutating side-effects.
+     * Returns [false, ''] when EXPLAIN is not captured.
+     *
+     * @return array{0: bool, 1: string}
+     */
+    private function captureExplain(QueryExecuted $event, int $durationInMicroseconds): array
+    {
+        $thresholdMs = (int) config('xelentwatch.filtering.slow_query_threshold_ms', 500);
+
+        if ($durationInMicroseconds < $thresholdMs * 1000) {
+            return [false, ''];
+        }
+
+        $normalised = strtolower(trim($event->sql));
+
+        if (! str_starts_with($normalised, 'select')) {
+            return [false, ''];
+        }
+
+        try {
+            $results = $event->connection->select('EXPLAIN ' . $event->sql, $event->bindings);
+            return [true, json_encode($results, JSON_UNESCAPED_UNICODE) ?: ''];
+        } catch (\Throwable) {
+            return [false, ''];
+        }
     }
 
     private function hash(QueryExecuted $event, Query $record): string

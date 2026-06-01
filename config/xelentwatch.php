@@ -37,7 +37,7 @@ return [
         'ignore_queries' => env('XELENTWATCH_IGNORE_QUERIES', false),
         'log_level' => env('XELENTWATCH_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
         'ignore_commands' => ['list', 'help'],
-
+        'slow_query_threshold_ms' => env('XELENTWATCH_SLOW_QUERY_THRESHOLD_MS', 500),
     ],
 
     'ingest' => [
