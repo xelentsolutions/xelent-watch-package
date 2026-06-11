@@ -323,6 +323,7 @@ final class XelentwatchServiceProvider extends ServiceProvider
             Console\AgentCommand::class,
             Console\StatusCommand::class,
             Console\AgentControlCommand::class,
+            Console\InventorySendCommand::class,
         ]);
     }
 

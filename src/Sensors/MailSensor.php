@@ -58,14 +58,15 @@ final class MailSensor
                 class: $class,
                 subject: $event->message->getSubject() ?? '',
                 to: count($event->message->getTo()),
-                cc: count($event->message->getCc()),
-                bcc: count($event->message->getBcc()),
+                cc: array_keys($event->message->getCc() ?: []),
+                bcc: array_keys($event->message->getBcc() ?: []),
                 attachments: count($event->message->getAttachments()),
                 duration: (int) round(($now - $this->startTime) * 1_000_000),
                 failed: false, // TODO: The framework doesn't dispatch a failed event.
             ),
             function () use ($now, $record) {
                 $this->executionState->mail++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 1,
@@ -80,11 +81,13 @@ final class MailSensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     // --- //
                     'mailer' => Str::tinyText($record->mailer),
                     'class' => Str::tinyText($record->class),
-                    'subject' => Str::tinyText($record->subject),
-                    'to' => $record->to,
+                    'mail_subject' => Str::tinyText($record->subject),
+                    'mail_to' => $record->to,
                     'cc' => $record->cc,
                     'bcc' => $record->bcc,
                     'attachments' => $record->attachments,

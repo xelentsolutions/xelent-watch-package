@@ -55,6 +55,8 @@ final class CommandSensor
                 duration: array_sum($this->commandState->stageDurations),
             ),
             function () use ($record) {
+                $userDetails = $this->commandState->user->details();
+
                 return [
                     'v' => 1,
                     't' => 'command',
@@ -65,9 +67,12 @@ final class CommandSensor
                     'trace_id' => $this->commandState->trace,
                     // --- //
                     'class' => $record->class,
-                    'name' => $record->name,
+                    'command_name' => $record->name,
                     'command' => $record->command,
                     'exit_code' => $record->exitCode,
+                    'user' => $this->commandState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     'duration' => $record->duration,
                     // --- //
                     'bootstrap' => $this->commandState->stageDurations[ExecutionStage::Bootstrap->value],

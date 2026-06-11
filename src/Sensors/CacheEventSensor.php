@@ -63,7 +63,7 @@ final class CacheEventSensor
             }
 
             if ($this->startTime === null) {
-                throw new RuntimeException('No start time found for ['.$event::class."] event with key [{$event->key}].");
+                throw new RuntimeException('No start time found for [' . $event::class . "] event with key [{$event->key}].");
             }
 
             $startTime = $this->startTime;
@@ -85,7 +85,7 @@ final class CacheEventSensor
             KeyWriteFailed::class => 'write-failure',
             KeyForgotten::class => 'delete',
             KeyForgetFailed::class => 'delete-failure',
-            default => throw new RuntimeException('Unexpected event type ['.$event::class.']'),
+            default => throw new RuntimeException('Unexpected event type [' . $event::class . ']'),
         };
 
         return [
@@ -98,6 +98,7 @@ final class CacheEventSensor
             ),
             function () use ($startTime, $record) {
                 $this->executionState->cacheEvents++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 1,
@@ -112,12 +113,14 @@ final class CacheEventSensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     // --- //
                     'store' => Str::tinyText($record->store),
-                    'key' => Str::tinyText($record->key),
-                    'type' => $record->type,
+                    'cache_key' => Str::tinyText($record->key),
+                    'cache_type' => $record->type,
                     'duration' => $record->duration,
-                    'ttl' => $record->ttl,
+                    'cache_ttl' => $record->ttl,
                 ];
             },
         ];

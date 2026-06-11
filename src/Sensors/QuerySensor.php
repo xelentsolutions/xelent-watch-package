@@ -65,6 +65,8 @@ final class QuerySensor
             function () use ($event, $record) {
                 $this->executionState->queries++;
 
+                $userDetails = $this->executionState->user->details();
+
                 return [
                     'v' => 1,
                     't' => 'query',
@@ -78,6 +80,8 @@ final class QuerySensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     'sql' => Str::mediumText($record->sql),
                     'file' => Str::tinyText($record->file),
                     'line' => $record->line,

@@ -33,7 +33,7 @@ final class UserSensor
             'v' => 1,
             't' => 'user',
             'timestamp' => $this->clock->microtime(),
-            'id' => Str::tinyText((string) $details['id']), // @phpstan-ignore cast.string
+            'user' => Str::tinyText((string) $details['id']), // @phpstan-ignore cast.string
             'name' => Str::tinyText((string) ($details['name'] ?? '')), // @phpstan-ignore cast.string
             'username' => Str::tinyText((string) ($details['username'] ?? '')), // @phpstan-ignore cast.string
         ];

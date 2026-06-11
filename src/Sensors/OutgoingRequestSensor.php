@@ -44,6 +44,7 @@ final class OutgoingRequestSensor
             ),
             function () use ($startMicrotime, $uri, $record) {
                 $this->executionState->outgoingRequests++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 1,
@@ -58,6 +59,8 @@ final class OutgoingRequestSensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     // --- //
                     'host' => Str::tinyText($uri->getHost()),
                     'method' => Str::tinyText($record->method),

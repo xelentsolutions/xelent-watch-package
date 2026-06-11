@@ -51,6 +51,7 @@ final class ScheduledTaskSensor
         $name = $this->normalizeTaskName($event->task);
         $timezone = $event->task->timezone instanceof DateTimeZone ? $event->task->timezone->getName() : $event->task->timezone;
         $repeatSeconds = Compatibility::$subMinuteScheduledTasksSupported && $event->task->repeatSeconds !== null ? $event->task->repeatSeconds : 0;
+        $userDetails = $this->commandState->user->details();
 
         return [
             'v' => 1,
@@ -62,8 +63,11 @@ final class ScheduledTaskSensor
                 ? hash('xxh128', "{$name},{$event->task->expression},{$timezone},{$repeatSeconds}")
                 : hash('xxh128', "{$name},{$event->task->expression},{$timezone}"),
             'trace_id' => $this->commandState->trace,
+            'user' => $this->commandState->user->id(),
+            'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+            'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
             // --- //
-            'name' => $name,
+            'scheduled_task_name' => $name,
             'cron' => $event->task->expression,
             'timezone' => $timezone,
             'repeat_seconds' => $repeatSeconds,
@@ -134,7 +138,7 @@ final class ScheduledTaskSensor
 
             return sprintf(
                 'Closure at: %s:%s',
-                str_replace(base_path().DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
+                str_replace(base_path() . DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
                 $function->getStartLine()
             );
         }

@@ -45,6 +45,7 @@ final class JobAttemptSensor
 
         $now = $this->clock->microtime();
         $name = $event->job->resolveName();
+        $userDetails = $this->commandState->user->details();
 
         return [
             'v' => 1,
@@ -55,12 +56,14 @@ final class JobAttemptSensor
             '_group' => hash('xxh128', $name),
             'trace_id' => $this->commandState->trace,
             'user' => $this->commandState->user->id(),
+            'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+            'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
             // --- //
             'job_id' => $event->job->payload()['xelentwatch']['job_id'] ?? $event->job->uuid(),
             'attempt_id' => $this->commandState->id(),
             'attempt' => $this->commandState->attempts,
-            'name' => $name,
-            'connection' => $event->job->getConnectionName(),
+            'job_name' => $name,
+            'job_connection' => $event->job->getConnectionName(),
             'queue' => $this->normalizeQueue($event->job->getConnectionName(), $event->job->getQueue()),
             'status' => match (true) {
                 $event->job->isReleased() => 'released',
@@ -69,21 +72,21 @@ final class JobAttemptSensor
             },
             'duration' => (int) round(($now - $this->commandState->timestamp) * 1_000_000),
             // --- //
-            'exceptions' => new LazyValue(fn () => $this->commandState->exceptions),
-            'logs' => new LazyValue(fn () => $this->commandState->logs),
-            'queries' => new LazyValue(fn () => $this->commandState->queries),
-            'lazy_loads' => new LazyValue(fn () => $this->commandState->lazyLoads),
-            'jobs_queued' => new LazyValue(fn () => $this->commandState->jobsQueued),
-            'mail' => new LazyValue(fn () => $this->commandState->mail),
-            'notifications' => new LazyValue(fn () => $this->commandState->notifications),
-            'outgoing_requests' => new LazyValue(fn () => $this->commandState->outgoingRequests),
-            'files_read' => new LazyValue(fn () => $this->commandState->filesRead),
-            'files_written' => new LazyValue(fn () => $this->commandState->filesWritten),
-            'cache_events' => new LazyValue(fn () => $this->commandState->cacheEvents),
-            'hydrated_models' => new LazyValue(fn () => $this->commandState->hydratedModels),
-            'peak_memory_usage' => new LazyValue(fn () => $this->commandState->peakMemory()),
-            'exception_preview' => new LazyValue(fn () => Str::tinyText($this->commandState->exceptionPreview)),
-            'context' => new LazyValue(fn () => $this->serializedContext()),
+            'exceptions' => new LazyValue(fn() => $this->commandState->exceptions),
+            'logs' => new LazyValue(fn() => $this->commandState->logs),
+            'queries' => new LazyValue(fn() => $this->commandState->queries),
+            'lazy_loads' => new LazyValue(fn() => $this->commandState->lazyLoads),
+            'jobs_queued' => new LazyValue(fn() => $this->commandState->jobsQueued),
+            'mail' => new LazyValue(fn() => $this->commandState->mail),
+            'notifications' => new LazyValue(fn() => $this->commandState->notifications),
+            'outgoing_requests' => new LazyValue(fn() => $this->commandState->outgoingRequests),
+            'files_read' => new LazyValue(fn() => $this->commandState->filesRead),
+            'files_written' => new LazyValue(fn() => $this->commandState->filesWritten),
+            'cache_events' => new LazyValue(fn() => $this->commandState->cacheEvents),
+            'hydrated_models' => new LazyValue(fn() => $this->commandState->hydratedModels),
+            'peak_memory_usage' => new LazyValue(fn() => $this->commandState->peakMemory()),
+            'exception_preview' => new LazyValue(fn() => Str::tinyText($this->commandState->exceptionPreview)),
+            'context' => new LazyValue(fn() => $this->serializedContext()),
         ];
     }
 }

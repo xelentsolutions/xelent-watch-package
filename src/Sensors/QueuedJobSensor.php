@@ -70,6 +70,7 @@ final class QueuedJobSensor
             ),
             function () use ($now, $record) {
                 $this->executionState->jobsQueued++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 1,
@@ -84,10 +85,12 @@ final class QueuedJobSensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     'job_id' => $record->jobId,
-                    'name' => Str::text($record->name),
+                    'job_name' => Str::text($record->name),
                     'connection' => Str::tinyText($record->connection),
-                    'queue' => Str::tinyText($record->queue),
+                    'job_queue' => Str::tinyText($record->queue),
                     'duration' => $record->duration,
                 ];
             },

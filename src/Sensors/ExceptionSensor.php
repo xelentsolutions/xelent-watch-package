@@ -85,6 +85,7 @@ final class ExceptionSensor
             ),
             function () use ($nowMicrotime, $record, $normalizedException) {
                 $this->executionState->exceptions++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 3,
@@ -92,7 +93,7 @@ final class ExceptionSensor
                     'timestamp' => $nowMicrotime,
                     'deploy' => $this->executionState->deploy,
                     'server' => $this->executionState->server,
-                    '_group' => hash('xxh128', $record->class.','.$record->code.','.$record->file.','.$record->line),
+                    '_group' => hash('xxh128', $record->class . ',' . $record->code . ',' . $record->file . ',' . $record->line),
                     'trace_id' => $this->executionState->trace,
                     'execution_source' => $this->executionState->source,
                     'execution_id' => $this->executionState->id(),
@@ -108,6 +109,8 @@ final class ExceptionSensor
                     'handled' => $record->handled,
                     'php_version' => $this->executionState->phpVersion,
                     'laravel_version' => $this->executionState->laravelVersion,
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                 ];
             },
         ];
@@ -133,7 +136,7 @@ final class ExceptionSensor
             // Insert the exception location as the first frame.
             // This matches the behavior of Symfony's exception renderer.
             [
-                'file' => $this->location->normalizeFile($e->getFile()).':'.$e->getLine(),
+                'file' => $this->location->normalizeFile($e->getFile()) . ':' . $e->getLine(),
                 'source' => '',
                 'code' => $this->fetchSourceCode($e->getFile(), $e->getLine()),
             ],
@@ -153,7 +156,7 @@ final class ExceptionSensor
             };
 
             if (isset($frame['line']) && is_int($frame['line'])) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $file .= ':'.$frame['line'];
+                $file .= ':' . $frame['line'];
             }
 
             $source = '';
@@ -173,7 +176,7 @@ final class ExceptionSensor
             $source .= '(';
 
             if (isset($frame['args']) && is_array($frame['args']) && count($frame['args']) > 0) { // @phpstan-ignore booleanAnd.rightAlwaysTrue
-                $args = array_map(static fn ($argument) => match (gettype($argument)) {
+                $args = array_map(static fn($argument) => match (gettype($argument)) {
                     'NULL' => 'null',
                     'boolean' => 'bool',
                     'integer' => 'int',
@@ -187,7 +190,7 @@ final class ExceptionSensor
                 }, $frame['args']);
 
                 if (! array_is_list($args)) {
-                    $args = array_map(static fn ($value, $key) => "{$key}: {$value}", $args, array_keys($args));
+                    $args = array_map(static fn($value, $key) => "{$key}: {$value}", $args, array_keys($args));
                 }
 
                 $source .= implode(', ', $args);

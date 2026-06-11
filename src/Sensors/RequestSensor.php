@@ -106,6 +106,8 @@ final class RequestSensor
                 files: clone $request->files,
             ),
             function () use ($request, $response, $record) {
+                $userDetails = $this->requestState->user->details();
+
                 return [
                     'v' => 1,
                     't' => 'request',
@@ -115,6 +117,8 @@ final class RequestSensor
                     '_group' => hash('xxh128', implode('|', $record->routeMethods) . ",{$record->routeDomain},{$record->routePath}"),
                     'trace_id' => $this->requestState->trace,
                     'user' => $this->requestState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     // --- //
                     'method' => $record->method,
                     'url' => $record->url,

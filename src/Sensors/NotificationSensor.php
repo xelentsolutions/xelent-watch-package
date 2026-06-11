@@ -43,7 +43,7 @@ final class NotificationSensor
         }
 
         if ($this->startTime === null) {
-            throw new RuntimeException('No start time found for ['.$event->notifiable::class.'].'); // @phpstan-ignore classConstant.nonObject
+            throw new RuntimeException('No start time found for [' . $event->notifiable::class . '].'); // @phpstan-ignore classConstant.nonObject
         }
 
         if (str_contains($event->notification::class, "@anonymous\0")) {
@@ -60,6 +60,7 @@ final class NotificationSensor
             ),
             function () use ($now, $record) {
                 $this->executionState->notifications++;
+                $userDetails = $this->executionState->user->details();
 
                 return [
                     'v' => 1,
@@ -74,6 +75,8 @@ final class NotificationSensor
                     'execution_preview' => $this->executionState->executionPreview(),
                     'execution_stage' => $this->executionState->stage,
                     'user' => $this->executionState->user->id(),
+                    'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+                    'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
                     // --- //
                     'channel' => Str::tinyText($record->channel),
                     'class' => Str::tinyText($record->class),

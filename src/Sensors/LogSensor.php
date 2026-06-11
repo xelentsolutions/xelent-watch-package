@@ -26,6 +26,7 @@ final class LogSensor
     public function __invoke(LogRecord $record): array
     {
         $this->executionState->logs++;
+        $userDetails = $this->executionState->user->details();
 
         return [
             'v' => 1,
@@ -39,6 +40,8 @@ final class LogSensor
             'execution_preview' => $this->executionState->executionPreview(),
             'execution_stage' => $this->executionState->stage,
             'user' => $this->executionState->user->id(),
+            'name' => $userDetails !== null ? Str::tinyText((string) ($userDetails['name'] ?? '')) : '',
+            'username' => $userDetails !== null ? Str::tinyText((string) ($userDetails['username'] ?? '')) : '',
             // --- //
             'level' => Str::tinyText($record->level->toPsrLogLevel()),
             'message' => Str::text($record->message),
